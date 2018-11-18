@@ -1,30 +1,39 @@
 #!/usr/bin/env python3
 import serial
+import time
+from random import randint
 
 #serial init
-#serial_ = serial.Serial('/dev/ttyACM0', 9600)
+serial_ = serial.Serial('/dev/ttyACM0', 9600)
+time.sleep(2)
 
-#input color
-red = bytes([int(input("RED = "))])
-green = bytes([int(input("GREEN = "))])
-blue = bytes([int(input("BLUE = "))])
+for ii in range(0,100):
+    #input color
+    red = bytes([randint(0, 255)])
+    green = bytes([randint(0, 255)])
+    blue = bytes([randint(0, 255)])
 
-#encode
-ser_message = b'R' + red + b'G' + green + b'B' + blue
+    #binary encode
+    serial_out =  b'R' + red + b'G' + green + b'B' + blue
 
-#serial communication
-#serial_.write(message.encode())
-#print(serial_.readline())
+    #serial communication
+    serial_.write(serial_out)
+    time.sleep(5)
 
-#decode for example
-L1 = bytes([ser_message[0]]).decode('utf8')
-V1 = ser_message[1]
-L2 = bytes([ser_message[2]]).decode('utf8')
-V2 = ser_message[3]
-L3 = bytes([ser_message[4]]).decode('utf8')
-V3 = ser_message[5]
-print(L1,V1,L2,V2,L3,V3)
+    #decode the same message returned by the arduino
+    i = 0
+    message_in = []
+    while serial_.in_waiting:
+        serial_in = serial_.read()
+        if i == 1 :
+            message_in.append(int.from_bytes(serial_in, byteorder='big', signed=False))
+            i = 0
+        elif i == 0 :
+            message_in.append(serial_in.decode('utf8'))
+            i = 1
 
-#serial close
-#serial.close()
+    #print message
+    print(message_in)
 
+#close serial
+serial_.close()
